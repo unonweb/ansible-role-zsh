@@ -1,0 +1,160 @@
+---
+# TO DO
+# -----
+# - automatically add "source "$HOME/.zsh/themes/gnzh.zsh-theme" for each theme file that is copied
+
+- name: zsh role
+  tags:
+    - zsh
+  block:
+
+  # checks
+  - name: Check vars for zsh
+    ansible.builtin.assert:
+      that:
+        - zsh.user != None
+
+  # install
+  - name: Install apt packages
+    become: true
+    ansible.builtin.apt:
+      name:
+      - git # needed for oh-my-zsh 
+      - zsh
+      state: present
+
+  # make default shell
+  - name: Ensure zsh is the default shell
+    become: true
+    ansible.builtin.user:
+      name: "{{ zsh.user }}"
+      shell: "/usr/bin/zsh"
+
+  # theme files
+  - when: zsh.themes.files | length > 0
+    block:
+
+    # mkdir
+    - name: Mkdir /home/{{ zsh.user }}/.zsh/themes
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ zsh.user }}/.zsh/themes"
+        state: directory
+        mode: u=rwx,g=,o=
+        owner: "{{ zsh.user }}"
+        group: "{{ zsh.user }}"
+    
+    # cp theme files
+    - name: Copy theme files to /home/{{ zsh.user }}/.zshrc/themes
+      become: true
+      loop: "{{ zsh.themes.files }}"
+      ansible.builtin.copy:
+        src: "themes/{{ item }}"
+        dest: "/home/{{ zsh.user }}/.zsh/themes/"
+        owner: "{{ zsh.user }}"
+        group: "{{ zsh.user }}"
+        mode: u=rw,g=,o=
+
+  # plugin files
+  - when: zsh.plugins.files | length > 0
+    block:
+
+    # mkdir
+    - name: Mkdir /home/{{ zsh.user }}/.zsh/plugins
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ zsh.user }}/.zsh/plugins"
+        state: directory
+        mode: u=rwx,g=,o=
+        owner: "{{ zsh.user }}"
+        group: "{{ zsh.user }}"
+    
+    # cp plugin files
+    - name: Copy plugin files to /home/{{ zsh.user }}/.zshrc/plugins
+      become: true
+      loop: "{{ zsh.plugins.files }}"
+      ansible.builtin.copy:
+        src: "plugins/{{ item }}"
+        dest: "/home/{{ zsh.user }}/.zsh/plugins/"
+        owner: "{{ zsh.user }}"
+        group: "{{ zsh.user }}"
+        mode: u=rw,g=,o=
+
+  # zsh.oh-my-zsh
+  - when: zsh.oh_my_zsh == true
+    block:
+
+    # check root
+    - name: Check if oh-my-zsh is already installed
+      when: zsh.user == "root"
+      become: true
+      ansible.builtin.stat:
+        path: /root/.oh-my-zsh
+      register: ohMyZsh_root
+
+    # check user
+    - name: Check if oh-my-zsh is already installed (normal user)
+      when: zsh.user != "root"
+      become: true
+      ansible.builtin.stat:
+        path: "/home/{{ zsh.user }}/.oh-my-zsh"
+      register: ohMyZsh_user
+
+    # if oh-my-zsh does not exist
+    - when: (zsh.user == "root" and not ohMyZsh_root.stat.exists) or (zsh.user != "root" and not ohMyZsh_user.stat.exists)
+      block:
+
+      # download
+      - name: Download Oh My Zsh install skript
+        become: true
+        ansible.builtin.get_url:
+          url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+          dest: /tmp/install_ohmyzsh.sh
+          force: false
+          owner: "{{ zsh.user }}"
+          group: "{{ zsh.user }}"
+      
+      # run
+      - name: Run Oh My Zsh install script
+        become: true
+        become_user: "{{ zsh.user }}"
+        ansible.builtin.command:
+          cmd: sh /tmp/install_ohmyzsh.sh --unattended
+  
+  # zsh.config.src
+  - when: 
+    - zsh.config.src != None
+    - zsh.config.src != false
+    block:
+
+    # user
+    - name: Copy {{ zsh.config.src }} to /home/{{ zsh.user }}/.zshrc
+      when: zsh.user != "root"
+      become: true
+      ansible.builtin.copy:
+        src: "{{ zsh.config.src }}"
+        dest: "/home/{{ zsh.user }}/.zshrc"
+        owner: "{{ zsh.user }}"
+        group: "{{ zsh.user }}"
+        mode: u=rw,g=,o=
+    
+    # root
+    - name: Copy .zshrc to /root/.zshrc
+      when: zsh.user == "root"
+      become: true
+      ansible.builtin.copy:
+        src: "{{ zsh.config.src }}"
+        dest: /root/.zshrc
+        owner: root
+        group: root
+        mode: u=rw,g=,o=
+
+  # install plugins via apt 
+  # you still need to manually
+  # echo "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc
+  - when: zsh.plugins.apt | length > 0
+    name: Install plugins via apt 
+    become: true
+    ansible.builtin.apt:
+      name: "{{ zsh.plugins.apt }}"
+      state: present
