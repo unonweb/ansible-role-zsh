@@ -152,9 +152,9 @@
   # install plugins via apt 
   # you still need to manually
   # echo "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc
-  - when: zsh.plugins.apt | length > 0
+  - when: zsh.apt | length > 0
     name: Install plugins via apt 
     become: true
     ansible.builtin.apt:
-      name: "{{ zsh.plugins.apt }}"
+      name: "{{ zsh.apt }}"
       state: present

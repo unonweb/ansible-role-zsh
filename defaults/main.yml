@@ -1,18 +1,18 @@
 ---
 zsh:
   user:
-  oh_my_zsh: true
+  oh_my_zsh:
+  apt:
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting
+  - fzf
   plugins:
-    apt:
-      - zsh-autosuggestions
-      - zsh-syntax-highlighting
     files:
       - git.plugin.zsh
       - virtualenv.plugin.zsh
       - colored-man-pages.plugin.zsh
       - sudo.plugin.zsh
   themes:
-    apt: []
     files: []
   config:
     src:
