@@ -3,16 +3,20 @@ zsh:
   user:
   oh_my_zsh:
   apt:
-  - zsh-autosuggestions
-  - zsh-syntax-highlighting
-  - fzf
+    install:
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    - fzf
+    remove: []
   plugins:
-    files:
-      - git.plugin.zsh
-      - virtualenv.plugin.zsh
-      - colored-man-pages.plugin.zsh
-      - sudo.plugin.zsh
+    files: []    
   themes:
     files: []
   config:
     src:
+
+# zsh.plugin.files:
+# - git.plugin.zsh
+# - virtualenv.plugin.zsh
+# - colored-man-pages.plugin.zsh
+# - sudo.plugin.zsh

@@ -24,7 +24,7 @@
       state: present
 
   # make default shell
-  - name: Ensure zsh is the default shell
+  - name: Ensure zsh is the default shell for {{ zsh.user }}
     become: true
     ansible.builtin.user:
       name: "{{ zsh.user }}"
@@ -149,12 +149,84 @@
         group: root
         mode: u=rw,g=,o=
 
-  # install plugins via apt 
-  # you still need to manually
-  # echo "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ~/.zshrc
-  - when: zsh.apt | length > 0
+  # install plugins via apt
+  - when: zsh.apt.install | length > 0
     name: Install plugins via apt 
     become: true
     ansible.builtin.apt:
-      name: "{{ zsh.apt }}"
+      name: "{{ zsh.apt.install }}"
       state: present
+
+  # remove plugins via apt
+  - when: zsh.apt.remove | length > 0
+    name: Install plugins via apt 
+    become: true
+    ansible.builtin.apt:
+      name: "{{ zsh.apt.remove }}"
+      state: present
+  
+  # add lines to .zshrc
+  - block:
+
+    # zsh-syntax-highlighting
+    - name: Add line to /home/{{ zsh.user }}/.zshrc (zsh-syntax-highlighting)
+      when: "'zsh-syntax-highlighting' in zsh.apt.install"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
+        state: present
+        create: false # If specified, the file will be created if it does not already exist.
+
+    # zsh-autosuggestions
+    - name: Add line to /home/{{ zsh.user }}/.zshrc (zsh-autosuggestions)
+      when: "'zsh-autosuggestions' in zsh.apt.install"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
+        state: present
+        create: false # If specified, the file will be created if it does not already exist.
+
+    # zsh-autosuggestions
+    - name: Add line to /home/{{ zsh.user }}/.zshrc (fzf)
+      when: "'fzf' in zsh.apt.install"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source <(fzf --zsh)" # The line to insert/replace
+        state: present
+        create: false # If specified, the file will be created if it does not already exist.
+
+  # remove lines from .zshrc
+  - block:
+
+    # zsh-syntax-highlighting
+    - name: Remove line from /home/{{ zsh.user }}/.zshrc (zsh-syntax-highlighting)
+      when: "'zsh-syntax-highlighting' in zsh.apt.remove"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
+        state: absent
+        create: false # If specified, the file will be created if it does not already exist.
+
+    # zsh-autosuggestions
+    - name: Remove line from /home/{{ zsh.user }}/.zshrc (zsh-autosuggestions)
+      when: "'zsh-autosuggestions' in zsh.apt.remove"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
+        state: absent
+        create: false # If specified, the file will be created if it does not already exist.
+
+    # zsh-autosuggestions
+    - name: Remove line from /home/{{ zsh.user }}/.zshrc (fzf)
+      when: "'fzf' in zsh.apt.remove"
+      become: true
+      ansible.builtin.lineinfile:
+        path: "/home/{{ zsh.user }}/.zshrc"
+        line: "source <(fzf --zsh)" # The line to insert/replace
+        state: absent
+        create: false # If specified, the file will be created if it does not already exist.
