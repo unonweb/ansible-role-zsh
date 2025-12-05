@@ -84,6 +84,12 @@
   - when: zsh.oh_my_zsh == true
     block:
 
+    # install git
+    - name: Install git
+      become: true
+      ansible.builtin.apt:
+        name: git # needed for oh-my-zsh
+
     # check root
     - name: Check if oh-my-zsh is already installed
       when: zsh.user == "root"
@@ -149,9 +155,9 @@
         group: root
         mode: u=rw,g=,o=
 
-  # install plugins via apt
+  # install via apt
   - when: zsh.apt.install | length > 0
-    name: Install plugins via apt 
+    name: Apt install {{ zsh.apt.install  }}
     become: true
     ansible.builtin.apt:
       name: "{{ zsh.apt.install }}"
