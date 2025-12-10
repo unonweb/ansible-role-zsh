@@ -1,21 +1,17 @@
 ---
-zsh:
-  user:
-  oh_my_zsh:
-  apt:
-    install:
-    - zsh-autosuggestions
-    - zsh-syntax-highlighting
-    - fzf
-    remove: []
-  plugins:
-    files: []    
-  themes:
-    files: []
-  config:
-    src:
+zsh_user:
+zsh_make_default: true
+zsh_ohmyzsh:
+zsh_config_zshrc: # -> ~/.zshrc
+zsh_apt_install:
+- zsh-autosuggestions
+- zsh-syntax-highlighting
+- fzf
+zsh_apt_remove: []
+zsh_files_copy_plugins: [] # -> ~/.zsh/plugins/
+zsh_files_copy_themes: [] # -> ~/.zsh/themes/
 
-# zsh.plugin.files:
+# zsh_files_plugins
 # - git.plugin.zsh
 # - virtualenv.plugin.zsh
 # - colored-man-pages.plugin.zsh

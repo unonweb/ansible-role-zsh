@@ -1,87 +1,82 @@
 ---
-# TO DO
-# -----
-# - automatically add "source "$HOME/.zsh/themes/gnzh.zsh-theme" for each theme file that is copied
-
 - name: zsh role
   tags:
     - zsh
   block:
 
-  # checks
-  - name: Check vars for zsh
+  # assert
+  - name: Assertions for zsh
     ansible.builtin.assert:
       that:
-        - zsh.user != None
+        - zsh_user != None
 
   # install
   - name: Install apt packages
     become: true
     ansible.builtin.apt:
-      name:
-      - git # needed for oh-my-zsh 
-      - zsh
+      name: zsh
       state: present
 
   # make default shell
-  - name: Ensure zsh is the default shell for {{ zsh.user }}
+  - when: zsh_make_default == true
+    name: Ensure zsh is the default shell for {{ zsh_user }}
     become: true
     ansible.builtin.user:
-      name: "{{ zsh.user }}"
+      name: "{{ zsh_user }}"
       shell: "/usr/bin/zsh"
 
   # theme files
-  - when: zsh.themes.files | length > 0
+  - when: zsh_files_copy_themes | length > 0
     block:
 
     # mkdir
-    - name: Mkdir /home/{{ zsh.user }}/.zsh/themes
+    - name: Mkdir /home/{{ zsh_user }}/.zsh/themes
       become: true
       ansible.builtin.file:
-        path: "/home/{{ zsh.user }}/.zsh/themes"
+        path: "/home/{{ zsh_user }}/.zsh/themes"
         state: directory
         mode: u=rwx,g=,o=
-        owner: "{{ zsh.user }}"
-        group: "{{ zsh.user }}"
+        owner: "{{ zsh_user }}"
+        group: "{{ zsh_user }}"
     
     # cp theme files
-    - name: Copy theme files to /home/{{ zsh.user }}/.zshrc/themes
+    - name: Copy theme files to /home/{{ zsh_user }}/.zshrc/themes
       become: true
-      loop: "{{ zsh.themes.files }}"
+      loop: "{{ zsh_files_copy_themes }}"
       ansible.builtin.copy:
         src: "themes/{{ item }}"
-        dest: "/home/{{ zsh.user }}/.zsh/themes/"
-        owner: "{{ zsh.user }}"
-        group: "{{ zsh.user }}"
+        dest: "/home/{{ zsh_user }}/.zsh/themes/"
+        owner: "{{ zsh_user }}"
+        group: "{{ zsh_user }}"
         mode: u=rw,g=,o=
 
   # plugin files
-  - when: zsh.plugins.files | length > 0
+  - when: zsh_files_copy_plugins | length > 0
     block:
 
     # mkdir
-    - name: Mkdir /home/{{ zsh.user }}/.zsh/plugins
+    - name: Mkdir /home/{{ zsh_user }}/.zsh/plugins
       become: true
       ansible.builtin.file:
-        path: "/home/{{ zsh.user }}/.zsh/plugins"
+        path: "/home/{{ zsh_user }}/.zsh/plugins"
         state: directory
         mode: u=rwx,g=,o=
-        owner: "{{ zsh.user }}"
-        group: "{{ zsh.user }}"
+        owner: "{{ zsh_user }}"
+        group: "{{ zsh_user }}"
     
     # cp plugin files
-    - name: Copy plugin files to /home/{{ zsh.user }}/.zshrc/plugins
+    - name: Copy plugin files to /home/{{ zsh_user }}/.zshrc/plugins
       become: true
-      loop: "{{ zsh.plugins.files }}"
+      loop: "{{ zsh_files_copy_plugins }}"
       ansible.builtin.copy:
         src: "plugins/{{ item }}"
-        dest: "/home/{{ zsh.user }}/.zsh/plugins/"
-        owner: "{{ zsh.user }}"
-        group: "{{ zsh.user }}"
+        dest: "/home/{{ zsh_user }}/.zsh/plugins/"
+        owner: "{{ zsh_user }}"
+        group: "{{ zsh_user }}"
         mode: u=rw,g=,o=
 
   # zsh.oh-my-zsh
-  - when: zsh.oh_my_zsh == true
+  - when: zsh_ohmyzsh == true
     block:
 
     # install git
@@ -89,25 +84,26 @@
       become: true
       ansible.builtin.apt:
         name: git # needed for oh-my-zsh
+        state: present
 
     # check root
-    - name: Check if oh-my-zsh is already installed
-      when: zsh.user == "root"
+    - name: Check if oh-my-zsh is already installed (root)
+      when: zsh_user == "root"
       become: true
       ansible.builtin.stat:
         path: /root/.oh-my-zsh
-      register: ohMyZsh_root
+      register: __zsh_ohmyzsh_root
 
     # check user
-    - name: Check if oh-my-zsh is already installed (normal user)
-      when: zsh.user != "root"
+    - name: Check if oh-my-zsh is already installed (user)
+      when: zsh_user != "root"
       become: true
       ansible.builtin.stat:
-        path: "/home/{{ zsh.user }}/.oh-my-zsh"
-      register: ohMyZsh_user
+        path: "/home/{{ zsh_user }}/.oh-my-zsh"
+      register: __zsh_ohmyzsh_user
 
     # if oh-my-zsh does not exist
-    - when: (zsh.user == "root" and not ohMyZsh_root.stat.exists) or (zsh.user != "root" and not ohMyZsh_user.stat.exists)
+    - when: (zsh_user == "root" and not __zsh_ohmyzsh_root.stat.exists) or (zsh_user != "root" and not __zsh_ohmyzsh_user.stat.exists)
       block:
 
       # download
@@ -117,89 +113,87 @@
           url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
           dest: /tmp/install_ohmyzsh.sh
           force: false
-          owner: "{{ zsh.user }}"
-          group: "{{ zsh.user }}"
+          owner: "{{ zsh_user }}"
+          group: "{{ zsh_user }}"
       
       # run
       - name: Run Oh My Zsh install script
         become: true
-        become_user: "{{ zsh.user }}"
+        become_user: "{{ zsh_user }}"
         ansible.builtin.command:
           cmd: sh /tmp/install_ohmyzsh.sh --unattended
   
-  # zsh.config.src
-  - when: 
-    - zsh.config.src != None
-    - zsh.config.src != false
+  # zsh_config_zshrc
+  - when: zsh_config_zshrc != None
     block:
 
     # user
-    - name: Copy {{ zsh.config.src }} to /home/{{ zsh.user }}/.zshrc
-      when: zsh.user != "root"
+    - name: Copy {{ zsh_config_zshrc }} to /home/{{ zsh_user }}/.zshrc
+      when: zsh_user != "root"
       become: true
       ansible.builtin.copy:
-        src: "{{ zsh.config.src }}"
-        dest: "/home/{{ zsh.user }}/.zshrc"
-        owner: "{{ zsh.user }}"
-        group: "{{ zsh.user }}"
+        src: "{{ zsh_config_zshrc }}"
+        dest: "/home/{{ zsh_user }}/.zshrc"
+        owner: "{{ zsh_user }}"
+        group: "{{ zsh_user }}"
         mode: u=rw,g=,o=
     
     # root
-    - name: Copy .zshrc to /root/.zshrc
-      when: zsh.user == "root"
+    - name: Copy {{ zsh_config_zshrc }} to /root/.zshrc
+      when: zsh_user == "root"
       become: true
       ansible.builtin.copy:
-        src: "{{ zsh.config.src }}"
+        src: "{{ zsh_config_zshrc }}"
         dest: /root/.zshrc
         owner: root
         group: root
         mode: u=rw,g=,o=
 
-  # install via apt
-  - when: zsh.apt.install | length > 0
-    name: Apt install {{ zsh.apt.install  }}
+  # apt install
+  - when: zsh_apt_install | length > 0
+    name: Apt install {{ zsh_apt_install  }}
     become: true
     ansible.builtin.apt:
-      name: "{{ zsh.apt.install }}"
+      name: "{{ zsh_apt_install }}"
       state: present
 
-  # remove plugins via apt
-  - when: zsh.apt.remove | length > 0
-    name: Install plugins via apt 
+  # apt remove
+  - when: zsh_apt_remove | length > 0
+    name: Apt remove {{ zsh_apt_remove }}
     become: true
     ansible.builtin.apt:
-      name: "{{ zsh.apt.remove }}"
-      state: present
+      name: "{{ zsh_apt_remove }}"
+      state: absent
   
   # add lines to .zshrc
   - block:
 
     # zsh-syntax-highlighting
-    - name: Add line to /home/{{ zsh.user }}/.zshrc (zsh-syntax-highlighting)
-      when: "'zsh-syntax-highlighting' in zsh.apt.install"
+    - name: Add line to /home/{{ zsh_user }}/.zshrc (zsh-syntax-highlighting)
+      when: "'zsh-syntax-highlighting' in zsh_apt_install"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
         state: present
         create: false # If specified, the file will be created if it does not already exist.
 
     # zsh-autosuggestions
-    - name: Add line to /home/{{ zsh.user }}/.zshrc (zsh-autosuggestions)
-      when: "'zsh-autosuggestions' in zsh.apt.install"
+    - name: Add line to /home/{{ zsh_user }}/.zshrc (zsh-autosuggestions)
+      when: "'zsh-autosuggestions' in zsh_apt_install"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
         state: present
         create: false # If specified, the file will be created if it does not already exist.
 
     # zsh-autosuggestions
-    - name: Add line to /home/{{ zsh.user }}/.zshrc (fzf)
-      when: "'fzf' in zsh.apt.install"
+    - name: Add line to /home/{{ zsh_user }}/.zshrc (fzf)
+      when: "'fzf' in zsh_apt_install"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source <(fzf --zsh)" # The line to insert/replace
         state: present
         create: false # If specified, the file will be created if it does not already exist.
@@ -208,31 +202,31 @@
   - block:
 
     # zsh-syntax-highlighting
-    - name: Remove line from /home/{{ zsh.user }}/.zshrc (zsh-syntax-highlighting)
-      when: "'zsh-syntax-highlighting' in zsh.apt.remove"
+    - name: Remove line from /home/{{ zsh_user }}/.zshrc (zsh-syntax-highlighting)
+      when: "'zsh-syntax-highlighting' in zsh_apt_remove"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
         state: absent
         create: false # If specified, the file will be created if it does not already exist.
 
     # zsh-autosuggestions
-    - name: Remove line from /home/{{ zsh.user }}/.zshrc (zsh-autosuggestions)
-      when: "'zsh-autosuggestions' in zsh.apt.remove"
+    - name: Remove line from /home/{{ zsh_user }}/.zshrc (zsh-autosuggestions)
+      when: "'zsh-autosuggestions' in zsh_apt_remove"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
         state: absent
         create: false # If specified, the file will be created if it does not already exist.
 
     # zsh-autosuggestions
-    - name: Remove line from /home/{{ zsh.user }}/.zshrc (fzf)
-      when: "'fzf' in zsh.apt.remove"
+    - name: Remove line from /home/{{ zsh_user }}/.zshrc (fzf)
+      when: "'fzf' in zsh_apt_remove"
       become: true
       ansible.builtin.lineinfile:
-        path: "/home/{{ zsh.user }}/.zshrc"
+        path: "/home/{{ zsh_user }}/.zshrc"
         line: "source <(fzf --zsh)" # The line to insert/replace
         state: absent
         create: false # If specified, the file will be created if it does not already exist.
