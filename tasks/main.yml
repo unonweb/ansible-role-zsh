@@ -122,7 +122,27 @@
         become_user: "{{ zsh_user }}"
         ansible.builtin.command:
           cmd: sh /tmp/install_ohmyzsh.sh --unattended
-  
+
+  # zsh.oh-my-zsh
+  - when: zsh_ohmyzsh == false
+    block:
+
+    # check root
+    - when: zsh_user == "root"
+      name: Remove oh-my-zsh for user root
+      become: true
+      ansible.builtin.file:
+        path: /root/.oh-my-zsh
+        state: absent
+
+    # check user
+    - when: zsh_user != "root"
+      name: Remove oh-my-zsh for user {{ zsh_user }}
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ zsh_user }}/.oh-my-zsh"
+        state: absent
+
   # zsh_config_zshrc
   - when: zsh_config_zshrc != None
     block:
