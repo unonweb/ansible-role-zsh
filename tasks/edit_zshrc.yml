@@ -1,0 +1,65 @@
+# add lines to .zshrc
+- block:
+
+  # zsh-syntax-highlighting
+  - name: Add line to /home/{{ zsh_user }}/.zshrc (zsh-syntax-highlighting)
+    when: "'zsh-syntax-highlighting' in zsh_apt_install"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
+      state: present
+      create: false # If specified, the file will be created if it does not already exist.
+
+  # zsh-autosuggestions
+  - name: Add line to /home/{{ zsh_user }}/.zshrc (zsh-autosuggestions)
+    when: "'zsh-autosuggestions' in zsh_apt_install"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
+      state: present
+      create: false # If specified, the file will be created if it does not already exist.
+
+  # zsh-autosuggestions
+  - name: Add line to /home/{{ zsh_user }}/.zshrc (fzf)
+    when: "'fzf' in zsh_apt_install"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source <(fzf --zsh)" # The line to insert/replace
+      state: present
+      create: false # If specified, the file will be created if it does not already exist.
+
+# remove lines from .zshrc
+- block:
+
+  # zsh-syntax-highlighting
+  - name: Remove line from /home/{{ zsh_user }}/.zshrc (zsh-syntax-highlighting)
+    when: "'zsh-syntax-highlighting' in zsh_apt_remove"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" # The line to insert/replace
+      state: absent
+      create: false # If specified, the file will be created if it does not already exist.
+
+  # zsh-autosuggestions
+  - name: Remove line from /home/{{ zsh_user }}/.zshrc (zsh-autosuggestions)
+    when: "'zsh-autosuggestions' in zsh_apt_remove"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" # The line to insert/replace
+      state: absent
+      create: false # If specified, the file will be created if it does not already exist.
+
+  # fzf
+  - name: Remove line from /home/{{ zsh_user }}/.zshrc (fzf)
+    when: "'fzf' in zsh_apt_remove"
+    become: true
+    ansible.builtin.lineinfile:
+      path: "/home/{{ zsh_user }}/.zshrc"
+      line: "source <(fzf --zsh)" # The line to insert/replace
+      state: absent
+      create: false # If specified, the file will be created if it does not already exist.
