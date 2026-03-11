@@ -64,15 +64,10 @@ fi
 # Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS="true"
 
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
+DISABLE_AUTO_TITLE="false"
 ENABLE_CORRECTION="false"
 
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
+# COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
 # Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
 # COMPLETION_WAITING_DOTS="true"
 
@@ -89,15 +84,29 @@ ENABLE_CORRECTION="false"
 # see 'man strftime' for details.
 # HIST_STAMPS="mm/dd/yyyy"
 
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
 # PROMPT
 # ------
 
 # PROMPT='%F{green}%n@%m%f %F{blue}%~ %# '
 # PROMPT="%F{42}%n%f@%F{42}%m%f:%F{36}%~%f: "
 PROMPT="%F{42}%n%f@%F{42}%m%f:%F{36}%~%f 〉"
+
+# HISTORY
+# -------
+
+export HISTFILE=$HOME/.zsh_history
+
+if [[ ! -f "${HISTFILE}" ]]; then
+	touch $HISTFILE
+	chmod 600 $HISTFILE
+fi
+
+# Maximum lines kept in memory
+export HISTSIZE=100000
+# Maximum lines saved to $HISTFILE
+export SAVEHIST=100000
+# Like INC_APPEND_HISTORY + re-read history whenever accessing it
+setopt SHARE_HISTORY
 
 # PLUGINS
 # -------
