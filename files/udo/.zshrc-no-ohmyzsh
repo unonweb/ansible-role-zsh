@@ -48,8 +48,11 @@ else
 	if [[ -d "${HOME}/.local/bin" ]] && [[ "${PATH}" != *":${HOME}/.local/bin:"* ]] ; then
     	PATH="${HOME}/.local/bin:${PATH}"
 	fi
-
 	export EDITOR=nano
+fi
+
+if [ -f "${HOME}/.bash_aliases" ]; then
+    source ~/.bash_aliases
 fi
 
 # OTHER SETTINGS
@@ -107,6 +110,11 @@ export HISTSIZE=100000
 export SAVEHIST=100000
 # Like INC_APPEND_HISTORY + re-read history whenever accessing it
 setopt SHARE_HISTORY
+setopt HIST_SAVE_NO_DUPS
+# History won't save duplicates.
+setopt HIST_IGNORE_ALL_DUPS
+# History won't show duplicates on search.
+setopt HIST_FIND_NO_DUPS
 
 # PLUGINS
 # -------
@@ -122,4 +130,24 @@ fi
 # zsh-autosuggestions
 if [[ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
 	source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+# sudo.plugin.zsh
+if [ -f "$HOME/.zsh/plugins/sudo.plugin.zsh" ]; then
+	source "$HOME/.zsh/plugins/sudo.plugin.zsh"
+fi
+# colored-man-pages.plugin.zsh
+if [ -f "$HOME/.zsh/plugins/colored-man-pages.plugin.zsh" ]; then
+	source "$HOME/.zsh/plugins/colored-man-pages.plugin.zsh"
+fi
+# git.plugin.zsh
+if [ -f "$HOME/.zsh/plugins/git.plugin.zsh" ]; then
+	source "$HOME/.zsh/plugins/git.plugin.zsh"
+fi
+# virtualenv.plugin.zsh
+if [ -f "$HOME/.zsh/plugins/virtualenv.plugin.zsh" ]; then
+	source "$HOME/.zsh/plugins/virtualenv.plugin.zsh"
+fi
+# git-prompt.plugin.zsh
+if [ -f "$HOME/.zsh/plugins/git-prompt/git-prompt.plugin.zsh" ]; then
+	source "$HOME/.zsh/plugins/git-prompt/git-prompt.plugin.zsh"
 fi
