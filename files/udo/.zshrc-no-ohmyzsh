@@ -1,10 +1,19 @@
 # AUTO COMPLETION
 # ---------------
 
-autoload -U compinit; compinit
 # autoload: Zsh command that loads a function or file only when it is first needed (lazily), rather than loading it immediately
 # -U: This option tells autoload to unconditionally load the function, even if it's already been loaded previously.
 # compinit: built-in function in Zsh that initializes the completion system
+
+autoload -Uz compinit && compinit
+zmodload zsh/complist
+zstyle ':completion:*' menu select
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' matcher-list 'm:{a-z1-A-Z}={A-Z1-a-z}'
+
+# Use Tab and Shift-Tab to navigate the menu
+bindkey -M menuselect '^i' menu-complete
+bindkey -M menuselect '^[[Z' reverse-menu-complete
 
 # Add more completions to search path
 if [[ ":${FPATH}:" != *":/home/${USER}/.zsh/completions:"* ]]; then
